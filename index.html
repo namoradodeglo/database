@@ -117,6 +117,16 @@
 <body>
   <h1>Armazenar Dados de Pessoas</h1>
 
+  <!-- Solicitação de senha -->
+  <script>
+    const password = "bumbumguloso2024";
+    const userPassword = prompt("Digite a senha para acessar:");
+
+    if (userPassword !== password) {
+      document.body.innerHTML = "<h1>Acesso Negado</h1>";
+    }
+  </script>
+
   <!-- Filtro no topo -->
   <form id="filterForm" onsubmit="applyFilters(); return false;">
     <h3>Filtros</h3>
@@ -142,7 +152,11 @@
       <option value="Jaboatão dos Guararapes">Jaboatão dos Guararapes</option>
       <option value="São Lourenço da Mata">São Lourenço da Mata</option>
       <option value="Camaragibe">Camaragibe</option>
-      <!-- Adicione mais cidades se necessário -->
+      <option value="Paulista">Paulista</option>
+      <option value="Igarassu">Igarassu</option>
+      <option value="Itamaracá">Itamaracá</option>
+      <option value="Abreu e Lima">Abreu e Lima</option>
+      <option value="Itapissuma">Itapissuma</option>
     </select>
 
     <input type="text" id="bairro" placeholder="Bairro" required />
@@ -181,8 +195,7 @@
     <input type="file" id="photo" accept="image/*" />
     <button type="button" id="saveButton" onclick="saveData()">Salvar Dados</button>
   </form>
-
-  <h2>Dados Salvos</h2>
+<h2>Dados Salvos</h2>
   <div id="dataContainer"></div>
 
   <h2>Configurar Gráficos</h2>
@@ -344,6 +357,7 @@
       generateChart();
     });
   </script>
-  
+
+  <!-- Restante do código permanece inalterado -->
 </body>
 </html>
