@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciamento de Pessoas com Gráficos e Filtros</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #4A90E2;
+    }
+    #filterForm, #dataForm, #editForm {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin: 20px auto;
+      max-width: 900px;
+    }
+    input, button, select {
+      padding: 10px;
+      margin: 5px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 100%;
+      max-width: 200px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #dataContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 900px;
+      margin: 20px auto;
+    }
+    .person-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+    .person-card img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .person-info {
+      flex-grow: 1;
+    }
+    .person-info a {
+      color: #4A90E2;
+      text-decoration: none;
+    }
+    .delete-button, .edit-button {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      background: #ff6b6b;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .edit-button {
+      background: #FFA500;
+    }
+    #chartContainer {
+      width: 80%;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    #myChart {
+      max-width: 100%;
+    }
+    #editForm {
+      display: none;
+      margin: 20px auto;
+    }
+    @media (max-width: 600px) {
+      #filterForm, #dataForm, #editForm {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Armazenar Dados de Pessoas</h1>
+
+  <!-- Filtro no topo -->
+  <form id="filterForm" onsubmit="applyFilters(); return false;">
+    <h3>Filtros</h3>
+    <input type="number" id="filterIdade" placeholder="Idade mínima" />
+    <input type="number" id="filterBeleza" placeholder="Beleza mínima" />
+    <input type="number" id="filterDificuldade" placeholder="Dificuldade mínima" />
+    <input type="number" id="filterGostosura" placeholder="Gostosura mínima" />
+    <button type="submit">Aplicar Filtros</button>
+  </form>
+
+  <form id="dataForm">
+    <input type="text" id="nome" placeholder="Nome" required />
+    <input type="number" id="idade" placeholder="Idade" required />
+    <input type="number" id="beleza" placeholder="Beleza (1-10)" required />
+    <input type="number" id="dificuldade" placeholder="Dificuldade (1-10)" required />
+    <input type="number" id="gostosura" placeholder="Gostosura (1-10)" required />
+    <input type="text" id="pontosFortes" placeholder="Pontos Fortes (ex: peito, bunda)" required />
+    
+    <select id="cidade" placeholder="Cidade" required>
+      <option value="">Selecione a Cidade</option>
+      <option value="Recife">Recife</option>
+      <option value="Olinda">Olinda</option>
+      <option value="Jaboatão dos Guararapes">Jaboatão dos Guararapes</option>
+      <option value="São Lourenço da Mata">São Lourenço da Mata</option>
+      <option value="Camaragibe">Camaragibe</option>
+      <!-- Adicione mais cidades se necessário -->
+    </select>
+
+    <input type="text" id="bairro" placeholder="Bairro" required />
+    
+    <select id="tipoCorporal" required>
+      <option value="">Selecione o Tipo Corporal</option>
+      <option value="magra3">Magra 3</option>
+      <option value="magra2">Magra 2</option>
+      <option value="magra1">Magra 1</option>
+      <option value="gostosa">Gostosa</option>
+      <option value="gostosona">Gostosona</option>
+      <option value="gordinha">Gordinha</option>
+      <option value="gorda">Gorda</option>
+    </select>
+
+    <select id="corCabelo" onchange="toggleCachoOptions();" required>
+      <option value="">Selecione a Cor do Cabelo</option>
+      <option value="cacheado">Cacheado</option>
+      <option value="loiro">Loiro</option>
+      <option value="ruivo">Ruivo</option>
+      <option value="moreno">Moreno</option>
+      <option value="outros">Outros</option>
+    </select>
+
+    <div id="cachoOptions" style="display: none;">
+      <select id="corCachos">
+        <option value="">Selecione a Cor dos Cachos</option>
+        <option value="loiro">Loiro</option>
+        <option value="ruivo">Ruivo</option>
+        <option value="moreno">Moreno</option>
+        <option value="outros">Outros</option>
+      </select>
+    </div>
+
+    <input type="url" id="instagram" placeholder="Link para Instagram" required />
+    <input type="file" id="photo" accept="image/*" />
+    <button type="button" id="saveButton" onclick="saveData()">Salvar Dados</button>
+  </form>
+
+  <h2>Dados Salvos</h2>
+  <div id="dataContainer"></div>
+
+  <h2>Configurar Gráficos</h2>
+  <label for="dataMetric">Escolha a Métrica:</label>
+  <select id="dataMetric" onchange="generateChart()">
+    <option value="idade">Idade</option>
+    <option value="beleza">Beleza</option>
+    <option value="dificuldade">Dificuldade</option>
+    <option value="gostosura">Gostosura</option>
+    <option value="cidade">Cidade</option>
+    <option value="bairro">Bairro</option>
+    <option value="tipoCorporal">Tipo Corporal</option>
+  </select>
+
+  <label for="chartType">Escolha o Tipo de Gráfico:</label>
+  <select id="chartType" onchange="generateChart()">
+    <option value="bar">Gráfico de Barras</option>
+    <option value="line">Gráfico de Linhas</option>
+    <option value="pie">Gráfico de Pizza</option>
+  </select>
+
+  <div id="chartContainer">
+    <canvas id="myChart"></canvas>
+  </div>
+
+  <!-- Formulário de Edição -->
+  <form id="editForm">
+    <h3>Editar Dados</h3>
+    <input type="text" id="editNome" placeholder="Nome" required />
+    <input type="number" id="editIdade" placeholder="Idade" required />
+    <input type="number" id="editBeleza" placeholder="Beleza (1-10)" required />
+    <input type="number" id="editDificuldade" placeholder="Dificuldade (1-10)" required />
+    <input type="number" id="editGostosura" placeholder="Gostosura (1-10)" required />
+    <input type="text" id="editPontosFortes" placeholder="Pontos Fortes" required />
+    
+    <select id="editCidade" required>
+      <option value="">Selecione a Cidade</option>
+      <option value="Recife">Recife</option>
+      <option value="Olinda">Olinda</option>
+      <option value="Jaboatão dos Guararapes">Jaboatão dos Guararapes</option>
+      <option value="São Lourenço da Mata">São Lourenço da Mata</option>
+      <option value="Camaragibe">Camaragibe</option>
+      <!-- Adicione mais cidades se necessário -->
+    </select>
+
+    <input type="text" id="editBairro" placeholder="Bairro" required />
+    
+    <select id="editTipoCorporal" required>
+      <option value="">Selecione o Tipo Corporal</option>
+      <option value="magra3">Magra 3</option>
+      <option value="magra2">Magra 2</option>
+      <option value="magra1">Magra 1</option>
+      <option value="gostosa">Gostosa</option>
+      <option value="gostosona">Gostosona</option>
+      <option value="gordinha">Gordinha</option>
+      <option value="gorda">Gorda</option>
+    </select>
+
+    <select id="editCorCabelo" required>
+      <option value="">Selecione a Cor do Cabelo</option>
+      <option value="cacheado">Cacheado</option>
+      <option value="loiro">Loiro</option>
+      <option value="ruivo">Ruivo</option>
+      <option value="moreno">Moreno</option>
+      <option value="outros">Outros</option>
+    </select>
+
+    <input type="url" id="editInstagram" placeholder="Link para Instagram" required />
+    <button type="button" id="updateButton" onclick="updateData()">Atualizar Dados</button>
+  </form>
+
+  <script>
+    const pessoas = JSON.parse(localStorage.getItem('pessoas')) || [];
+    let editIndex = -1;
+  
+    function saveData() {
+      const nome = document.getElementById('nome').value;
+      const idade = document.getElementById('idade').value;
+      const beleza = document.getElementById('beleza').value;
+      const dificuldade = document.getElementById('dificuldade').value;
+      const gostosura = document.getElementById('gostosura').value;
+      const pontosFortes = document.getElementById('pontosFortes').value;
+      const cidade = document.getElementById('cidade').value;
+      const bairro = document.getElementById('bairro').value;
+      const tipoCorporal = document.getElementById('tipoCorporal').value;
+      const corCabelo = document.getElementById('corCabelo').value;
+      const instagram = document.getElementById('instagram').value;
+  
+      const newPerson = {
+        nome,
+        idade: parseInt(idade),
+        beleza: parseInt(beleza),
+        dificuldade: parseInt(dificuldade),
+        gostosura: parseInt(gostosura),
+        pontosFortes,
+        cidade,
+        bairro,
+        tipoCorporal,
+        corCabelo,
+        instagram
+      };
+  
+      if (editIndex >= 0) {
+        pessoas[editIndex] = newPerson;
+        editIndex = -1;
+      } else {
+        pessoas.push(newPerson);
+      }
+  
+      document.getElementById('dataForm').reset();
+      updateLocalStorage();
+      renderData();
+      generateChart();
+    }
+  
+    function renderData() {
+      const container = document.getElementById('dataContainer');
+      container.innerHTML = ''; // Limpa o conteúdo antes de renderizar
+  
+      pessoas.forEach((pessoa, index) => {
+        const card = document.createElement('div');
+        card.classList.add('person-card');
+        card.innerHTML = `
+          <img src="https://via.placeholder.com/60" alt="Foto de ${pessoa.nome}">
+          <div class="person-info">
+            <strong>${pessoa.nome}</strong><br>
+            Idade: ${pessoa.idade}<br>
+            Beleza: ${pessoa.beleza}<br>
+            Dificuldade: ${pessoa.dificuldade}<br>
+            Gostosura: ${pessoa.gostosura}<br>
+            Pontos Fortes: ${pessoa.pontosFortes}<br>
+            Cidade: ${pessoa.cidade}<br>
+            Bairro: ${pessoa.bairro}<br>
+            Tipo Corporal: ${pessoa.tipoCorporal}<br>
+            Cor do Cabelo: ${pessoa.corCabelo}<br>
+            Instagram: <a href="${pessoa.instagram}" target="_blank">${pessoa.instagram}</a>
+          </div>
+          <button class="edit-button" onclick="editData(${index})">Editar</button>
+          <button class="delete-button" onclick="deleteData(${index})">Excluir</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+  
+    function updateLocalStorage() {
+      localStorage.setItem('pessoas', JSON.stringify(pessoas));
+    }
+  
+    function deleteData(index) {
+      pessoas.splice(index, 1);
+      updateLocalStorage();
+      renderData();
+      generateChart();
+    }
+  
+    // Carrega os dados do localStorage ao inicializar
+    document.addEventListener('DOMContentLoaded', () => {
+      renderData();
+      generateChart();
+    });
+  </script>
+  
+</body>
+</html>
